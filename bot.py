@@ -278,9 +278,9 @@ async def broadcast_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         try:
             await context.bot.send_message(chat_id=uid, text=broadcast_text, parse_mode="Markdown")
             success_count += 1
-        except Exception:
-            fail_count import Exception  # ignore blocked/deleted users
+    except Exception:
             fail_count += 1
+        
 
     await status_msg.edit_text(
         f"✅ **Broadcast Completed!**\n\n"
