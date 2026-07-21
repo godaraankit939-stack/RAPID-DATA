@@ -292,7 +292,16 @@ async def broadcast_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode="Markdown"
     )
 
+import asyncio
+
 def main():
+    # Future-proof event loop management for any Python version
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
     app = ApplicationBuilder().token(BOT_TOKEN).post_init(post_init).build()
 
     # Handlers
@@ -302,7 +311,9 @@ def main():
     app.add_handler(CallbackQueryHandler(handle_quiz, pattern="^ans_"))
 
     print("🤖 Rapid Refunds Bot is fully running with Admin Panel, Menu, and Channels mapped!")
-    app.run_polling()
+    
+    # Run polling safely
+    app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == "__main__":
     main()
