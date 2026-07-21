@@ -61,12 +61,27 @@ def save_user(user_id):
 # Dictionary to store user math quiz sessions
 USER_QUIZ = {}
 
-# --- SET MENU COMMANDS (Blue Button) ---
+# --- SET MENU COMMANDS, BIO & DESCRIPTION ---
 async def post_init(application):
+    # 1. Blue Menu Command Button (/start)
     commands = [
         ("start", "Start the bot & solve puzzle")
     ]
     await application.bot.set_my_commands(commands)
+
+    # 2. Bot Bio (Short Description) & Description (Automatically set on startup)
+    try:
+        await application.bot.set_my_short_description(
+            "⚡ RAPID REFUNDS — Where Speed Meets Precision. Reship Like a Pro, Cashout Like a Boss."
+        )
+        await application.bot.set_my_description(
+            "⚡ RAPID REFUNDS — Fast, Secure, Reliable.\n"
+            "Reship packages, claim refunds, and cash out with full control and privacy. "
+            "Trusted by professionals, supporting 600+ verified stores, and designed for seamless, risk-free transactions.\n\n"
+            "👑 Founder & Refunder: @RapidRefunder"
+        )
+    except Exception as e:
+        logger.error(f"Error setting bot bio/description: {e}")
 
 # --- 1. START COMMAND & RANDOM MATH QUIZ ---
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -115,6 +130,19 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.answer()
         await query.edit_message_text(quiz_text, reply_markup=reply_markup, parse_mode="Markdown")
 
+# --- HELPER: PARALLEL LINK GENERATOR (Fast Speed) ---
+async def generate_single_link(bot, chat_id, expire_time):
+    try:
+        invite = await bot.create_chat_invite_link(
+            chat_id=chat_id,
+            member_limit=1,
+            expire_date=expire_time
+        )
+        return invite.invite_link
+    except Exception as e:
+        logger.error(f"Error creating link for ({chat_id}): {e}")
+        return "https://t.me/+_EjOLmtb1bZmZWU1"
+
 # --- 2. HANDLE QUIZ ANSWER ---
 async def handle_quiz(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -140,18 +168,13 @@ async def handle_quiz(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if selected_ans == correct_ans:
         expire_time = datetime.datetime.now() + datetime.timedelta(seconds=60)
         
-        links = {}
-        for key, chat_id in CHANNELS.items():
-            try:
-                invite = await context.bot.create_chat_invite_link(
-                    chat_id=chat_id,
-                    member_limit=1,
-                    expire_date=expire_time
-                )
-                links[key] = invite.invite_link
-            except Exception as e:
-                logger.error(f"Error creating link for {key} ({chat_id}): {e}")
-                links[key] = "https://t.me/+_EjOLmtb1bZmZWU1"
+        keys = list(CHANNELS.keys())
+        chat_ids = list(CHANNELS.values())
+        
+        tasks = [generate_single_link(context.bot, cid, expire_time) for cid in chat_ids]
+        generated_links = await asyncio.gather(*tasks)
+        
+        links = dict(zip(keys, generated_links))
 
         caption_text = (
             "⚡️ **RAPID REFUNDS** ⚡️\n"
@@ -302,32 +325,26 @@ def home():
 
 def run_flask():
     port = int(os.environ.get("PORT", 10000))
-    # Disable reloader and debug to avoid event loop conflicts in production
     web_app.run(host="0.0.0.0", port=port, debug=False, use_reloader=False)
 
 async def main():
-    # Flask ko alag thread me proper daemon mode par start karein
     import threading
     flask_thread = threading.Thread(target=run_flask, daemon=True)
     flask_thread.start()
 
-    # Telegram bot application build karein
     app = ApplicationBuilder().token(BOT_TOKEN).post_init(post_init).build()
 
-    # Handlers register karein
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("admin", admin_panel))
     app.add_handler(CommandHandler("broadcast", broadcast_message))
     app.add_handler(CallbackQueryHandler(handle_quiz, pattern="^ans_"))
 
-    print("🤖 Rapid Refunds Bot & Web Server started successfully!")
+    print("🤖 Rapid Refunds Bot & Lightning-Fast Web Server started successfully!")
     
-    # Modern async initialize aur start (Python 3.14 compatible)
     await app.initialize()
     await app.start()
     await app.updater.start_polling(allowed_updates=Update.ALL_TYPES)
     
-    # Keep the application running indefinitely
     stop_event = asyncio.Event()
     await stop_event.wait()
 
@@ -336,5 +353,6 @@ if __name__ == "__main__":
         asyncio.run(main())
     except (KeyboardInterrupt, SystemExit):
         pass
+
 
 
