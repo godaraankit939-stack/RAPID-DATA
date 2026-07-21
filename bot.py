@@ -3,7 +3,7 @@ import random
 import datetime
 import json
 import os
-import threading
+import asyncio
 from flask import Flask
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
@@ -293,34 +293,48 @@ async def broadcast_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode="Markdown"
     )
 
-# --- FLASK WEB SERVER JUGAD (Port Problem Solve karne ke liye) ---
+# --- FLASK WEB SERVER (For Render Web Service Live URL) ---
 web_app = Flask(__name__)
 
 @web_app.route("/")
 def home():
     return "🤖 Rapid Refunds Bot is Alive and Running!"
 
-def run_web():
+def run_flask():
     port = int(os.environ.get("PORT", 10000))
-    web_app.run(host="0.0.0.0", port=port)
+    # Disable reloader and debug to avoid event loop conflicts in production
+    web_app.run(host="0.0.0.0", port=port, debug=False, use_reloader=False)
 
-def main():
-    # Flask server ko background thread me start karein taaki Render ka port open rahe
-    t = threading.Thread(target=run_web)
-    t.daemon = True
-    t.start()
+async def main():
+    # Flask ko alag thread me proper daemon mode par start karein
+    import threading
+    flask_thread = threading.Thread(target=run_flask, daemon=True)
+    flask_thread.start()
 
+    # Telegram bot application build karein
     app = ApplicationBuilder().token(BOT_TOKEN).post_init(post_init).build()
 
-    # Handlers
+    # Handlers register karein
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("admin", admin_panel))
     app.add_handler(CommandHandler("broadcast", broadcast_message))
     app.add_handler(CallbackQueryHandler(handle_quiz, pattern="^ans_"))
 
     print("🤖 Rapid Refunds Bot & Web Server started successfully!")
-    app.run_polling(allowed_updates=Update.ALL_TYPES)
+    
+    # Modern async initialize aur start (Python 3.14 compatible)
+    await app.initialize()
+    await app.start()
+    await app.updater.start_polling(allowed_updates=Update.ALL_TYPES)
+    
+    # Keep the application running indefinitely
+    stop_event = asyncio.Event()
+    await stop_event.wait()
 
 if __name__ == "__main__":
-    main()
+    try:
+        asyncio.run(main())
+    except (KeyboardInterrupt, SystemExit):
+        pass
+
 
