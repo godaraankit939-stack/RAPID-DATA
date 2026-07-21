@@ -63,13 +63,11 @@ USER_QUIZ = {}
 
 # --- SET MENU COMMANDS, BIO & DESCRIPTION ---
 async def post_init(application):
-    # 1. Blue Menu Command Button (/start)
     commands = [
         ("start", "Start the bot & solve puzzle")
     ]
     await application.bot.set_my_commands(commands)
 
-    # 2. Bot Bio (Short Description) & Description (Automatically set on startup)
     try:
         await application.bot.set_my_short_description(
             "⚡ RAPID REFUNDS — Where Speed Meets Precision. Reship Like a Pro, Cashout Like a Boss."
@@ -119,16 +117,16 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     quiz_text = (
-        f"🔒 **Solve to get invites:**\n"
-        f"`{num1} {operator} {num2} = ?`"
+        f"🔒 Solve to get invites:\n"
+        f"{num1} {operator} {num2} = ?"
     )
 
     if update.message:
-        await update.message.reply_text(quiz_text, reply_markup=reply_markup, parse_mode="Markdown")
+        await update.message.reply_text(quiz_text, reply_markup=reply_markup)
     elif update.callback_query:
         query = update.callback_query
         await query.answer()
-        await query.edit_message_text(quiz_text, reply_markup=reply_markup, parse_mode="Markdown")
+        await query.edit_message_text(quiz_text, reply_markup=reply_markup)
 
 # --- HELPER: PARALLEL LINK GENERATOR (Fast Speed) ---
 async def generate_single_link(bot, chat_id, expire_time):
@@ -177,37 +175,37 @@ async def handle_quiz(update: Update, context: ContextTypes.DEFAULT_TYPE):
         links = dict(zip(keys, generated_links))
 
         caption_text = (
-            "⚡️ **RAPID REFUNDS** ⚡️\n"
+            "⚡️ RAPID REFUNDS ⚡️\n"
             "Reship Like a Pro. Control Like a Boss.\n\n"
             "⸻\n\n"
-            "🌟 **Warm Greetings from the RAPID Team!** 🌟\n"
+            "🌟 Warm Greetings from the RAPID Team! 🌟\n"
             "Welcome to the most trusted and efficient reship & refund network — where precision, privacy, and professionalism meet speed and reliability.\n\n"
             "⸻\n\n"
-            "📦 **Official RAPID Network Links:**\n\n"
-            "🔹 **Store List:**\n"
+            "📦 Official RAPID Network Links:\n\n"
+            "🔹 Store List:\n"
             f"👉 {links.get('store_list', '#')}\n\n"
-            "🔹 **Main Channel:**\n"
+            "🔹 Main Channel:\n"
             f"👉 {links.get('main_channel', '#')}\n\n"
-            "🔹 **Community Group:**\n"
+            "🔹 Community Group:\n"
             f"👉 {links.get('community_group', '#')}\n\n"
-            "🔹 **Backup Channel:**\n"
+            "🔹 Backup Channel:\n"
             f"👉 {links.get('backup_channel', '#')}\n\n"
             "⸻\n\n"
-            "💝 **Main Reship Channel:**\n"
+            "💝 Main Reship Channel:\n"
             f"👉 {links.get('main_reship', '#')}\n\n"
-            "🔥 **Vouch Channel:**\n"
+            "🔥 Vouch Channel:\n"
             f"👉 {links.get('vouch_channel', '#')}\n\n"
             "⸻\n\n"
-            "💸 **Rapid Cashouts:**\n"
+            "💸 Rapid Cashouts:\n"
             f"👉 {links.get('rapid_cashouts', '#')}\n\n"
-            "💰 **Cashout Vouches:**\n"
+            "💰 Cashout Vouches:\n"
             f"👉 {links.get('cashout_vouches', '#')}\n\n"
             "⸻\n"
-            "📨 **Your links (60s valid):**\n\n"
+            "📨 Your links (60s valid):\n\n"
             "1. Click the Link and Join\n"
-            "2. Make sure to join all the groups above by clicking the links'\n"
+            "2. Make sure to join all the groups above by clicking the links\n"
             "3. If you missed any, re-enter /start\n\n"
-            "👑 **Founder & Refunder:**\n"
+            "👑 Founder & Refunder:\n"
             "👉 @RapidRefunder"
         )
 
@@ -218,15 +216,14 @@ async def handle_quiz(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 with open(photo_path, "rb") as photo_file:
                     await query.message.reply_photo(
                         photo=photo_file,
-                        caption=caption_text,
-                        parse_mode="Markdown"
+                        caption=caption_text
                     )
                 await query.message.delete()
             else:
-                await query.edit_message_text(caption_text, parse_mode="Markdown")
+                await query.edit_message_text(caption_text)
         except Exception as e:
             logger.error(f"Error sending photo message: {e}")
-            await query.edit_message_text(caption_text, parse_mode="Markdown")
+            await query.edit_message_text(caption_text)
 
         if user_id in USER_QUIZ:
             del USER_QUIZ[user_id]
@@ -261,11 +258,10 @@ async def handle_quiz(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup = InlineKeyboardMarkup(keyboard)
 
         await query.edit_message_text(
-            f"❌ **Galat jawab! Naya puzzle solve karein:**\n\n"
-            f"🔒 **Solve to get invites:**\n"
-            f"`{num1} {operator} {num2} = ?`",
-            reply_markup=reply_markup,
-            parse_mode="Markdown"
+            f"❌ Galat jawab! Naya puzzle solve karein:\n\n"
+            f"🔒 Solve to get invites:\n"
+            f"{num1} {operator} {num2} = ?",
+            reply_markup=reply_markup
         )
 
 # --- 3. OWNER / ADMIN PANEL & BROADCAST ---
@@ -278,12 +274,12 @@ async def admin_panel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     total_users = len(users)
 
     text = (
-        f"👑 **Owner Admin Panel** 👑\n\n"
-        f"📊 **Total Bot Users:** `{total_users}`\n\n"
-        f"📢 **Broadcast Command:**\n"
-        f"Use `/broadcast [Your Message]` to send message to all users."
+        f"👑 Owner Admin Panel 👑\n\n"
+        f"📊 Total Bot Users: {total_users}\n\n"
+        f"📢 Broadcast Command:\n"
+        f"Use /broadcast [Your Message] to send message to all users."
     )
-    await update.message.reply_text(text, parse_mode="Markdown")
+    await update.message.reply_text(text)
 
 async def broadcast_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -291,7 +287,7 @@ async def broadcast_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if not context.args:
-        await update.message.reply_text("⚠️ Please provide a message to broadcast!\nExample: `/broadcast Hello everyone!`", parse_mode="Markdown")
+        await update.message.reply_text("⚠️ Please provide a message to broadcast!\nExample: /broadcast Hello everyone!")
         return
 
     broadcast_text = " ".join(context.args)
@@ -304,16 +300,15 @@ async def broadcast_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     for uid in users:
         try:
-            await context.bot.send_message(chat_id=uid, text=broadcast_text, parse_mode="Markdown")
+            await context.bot.send_message(chat_id=uid, text=broadcast_text)
             success_count += 1
         except Exception:
             fail_count += 1
 
     await status_msg.edit_text(
-        f"✅ **Broadcast Completed!**\n\n"
-        f"📤 Successfully Sent: `{success_count}`\n"
-        f"❌ Failed (Blocked bot): `{fail_count}`",
-        parse_mode="Markdown"
+        f"✅ Broadcast Completed!\n\n"
+        f"📤 Successfully Sent: {success_count}\n"
+        f"❌ Failed (Blocked bot): {fail_count}"
     )
 
 # --- FLASK WEB SERVER (For Render Web Service Live URL) ---
@@ -353,6 +348,7 @@ if __name__ == "__main__":
         asyncio.run(main())
     except (KeyboardInterrupt, SystemExit):
         pass
+
 
 
 
