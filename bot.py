@@ -3,14 +3,12 @@ import random
 import datetime
 import json
 import os
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, BotCommand
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
     CallbackQueryHandler,
     ContextTypes,
-    MessageHandler,
-    filters,
 )
 
 # Logging setup
@@ -23,7 +21,7 @@ logger = logging.getLogger(__name__)
 BOT_TOKEN = "8691022341:AAG5od4i35q5n4OiQpd1T7K_OqhRwQoEWcQ"
 OWNER_ID = 598309360
 
-# Aapke diye gaye channel IDs (Line-by-line mapping)
+# Aapke channels/groups ki chat IDs (Line-by-line mapping)
 CHANNELS = {
     "store_list": -1002405454804,
     "main_channel": -1002225044624,
@@ -33,7 +31,6 @@ CHANNELS = {
     "vouch_channel": -1002652451009,
     "rapid_cashouts": -1004310102304,
     "cashout_vouches": -1002107259762,
-    # 9th ID extra channel/backup ke liye
     "extra_channel": -1003053857216,
 }
 
@@ -43,7 +40,7 @@ USERS_FILE = "bot_users.json"
 def load_users():
     if os.path.exists(USERS_FILE):
         try:
-            with open(USERS_FILE, "r") as f:
+            with open(USERS_FILE, "r", encoding="utf-8") as f:
                 return set(json.load(f))
         except Exception:
             return set()
@@ -53,15 +50,17 @@ def save_user(user_id):
     users = load_users()
     if user_id not in users:
         users.add(user_id)
-        with open(USERS_FILE, "w") as f:
-            json.dump(list(users), f)
+        try:
+            with open(USERS_FILE, "w", encoding="utf-8") as f:
+                json.dump(list(users), f)
+        except Exception as e:
+            logger.error(f"Error saving user: {e}")
 
 # Dictionary to store user math quiz sessions
 USER_QUIZ = {}
 
 # --- SET MENU COMMANDS (Blue Button) ---
 async def post_init(application):
-    # Sirf /start menu button me dikhegi, /admin aur /broadcast chup rahengi
     commands = [
         ("start", "Start the bot & solve puzzle")
     ]
@@ -70,7 +69,8 @@ async def post_init(application):
 # --- 1. START COMMAND & RANDOM MATH QUIZ ---
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
-    save_user(user.id) # User ko save karein broadcast ke liye
+    if user:
+        save_user(user.id)
     
     # Generate random math quiz
     num1 = random.randint(1, 10)
@@ -83,7 +83,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             num1, num2 = num2, num1
         correct_answer = num1 - num2
 
-    USER_QUIZ[user.id] = {"answer": correct_answer}
+    if user:
+        USER_QUIZ[user.id] = {"answer": correct_answer}
 
     options = [correct_answer]
     while len(options) < 3:
@@ -121,11 +122,14 @@ async def handle_quiz(update: Update, context: ContextTypes.DEFAULT_TYPE):
     save_user(user_id)
 
     data = query.data
-    if not data.startswith("ans_"):
+    if not data or not data.startswith("ans_"):
         return
 
-    selected_ans = int(data.split("_")[1])
-    
+    try:
+        selected_ans = int(data.split("_")[1])
+    except (IndexError, ValueError):
+        return
+
     if user_id not in USER_QUIZ:
         await start(update, context)
         return
@@ -244,7 +248,7 @@ async def handle_quiz(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def admin_panel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if user_id != OWNER_ID:
-        return  # Normal users ke liye ye command exist hi nahi karegi
+        return
 
     users = load_users()
     total_users = len(users)
@@ -260,7 +264,7 @@ async def admin_panel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def broadcast_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if user_id != OWNER_ID:
-        return  # Normal users ke liye restricted
+        return
 
     if not context.args:
         await update.message.reply_text("⚠️ Please provide a message to broadcast!\nExample: `/broadcast Hello everyone!`", parse_mode="Markdown")
@@ -280,7 +284,6 @@ async def broadcast_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             success_count += 1
         except Exception:
             fail_count += 1
-        
 
     await status_msg.edit_text(
         f"✅ **Broadcast Completed!**\n\n"
