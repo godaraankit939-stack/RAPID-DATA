@@ -3,6 +3,8 @@ import random
 import datetime
 import json
 import os
+import threading
+from flask import Flask
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     ApplicationBuilder,
@@ -34,7 +36,7 @@ CHANNELS = {
     "extra_channel": -1003053857216,
 }
 
-# Simple JSON User Storage (Bina database ke users track karne ke liye)
+# Simple JSON User Storage
 USERS_FILE = "bot_users.json"
 
 def load_users():
@@ -72,7 +74,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if user:
         save_user(user.id)
     
-    # Generate random math quiz
     num1 = random.randint(1, 10)
     num2 = random.randint(1, 10)
     operator = random.choice(["+", "-"])
@@ -292,15 +293,22 @@ async def broadcast_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode="Markdown"
     )
 
-import asyncio
+# --- FLASK WEB SERVER JUGAD (Port Problem Solve karne ke liye) ---
+web_app = Flask(__name__)
+
+@web_app.route("/")
+def home():
+    return "🤖 Rapid Refunds Bot is Alive and Running!"
+
+def run_web():
+    port = int(os.environ.get("PORT", 10000))
+    web_app.run(host="0.0.0.0", port=port)
 
 def main():
-    # Future-proof event loop management for any Python version
-    try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+    # Flask server ko background thread me start karein taaki Render ka port open rahe
+    t = threading.Thread(target=run_web)
+    t.daemon = True
+    t.start()
 
     app = ApplicationBuilder().token(BOT_TOKEN).post_init(post_init).build()
 
@@ -310,10 +318,9 @@ def main():
     app.add_handler(CommandHandler("broadcast", broadcast_message))
     app.add_handler(CallbackQueryHandler(handle_quiz, pattern="^ans_"))
 
-    print("🤖 Rapid Refunds Bot is fully running with Admin Panel, Menu, and Channels mapped!")
-    
-    # Run polling safely
+    print("🤖 Rapid Refunds Bot & Web Server started successfully!")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == "__main__":
     main()
+
