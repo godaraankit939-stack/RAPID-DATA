@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 BOT_TOKEN = "8691022341:AAG5od4i35q5n4OiQpd1T7K_OqhRwQoEWcQ"
 OWNER_ID = 598309360
 
-# Aapke channels/groups ki chat IDs (Line-by-line mapping)
+# Aapke channels/groups ki chat IDs (Line-by-line mapping - Exactly 9 IDs)
 CHANNELS = {
     "store_list": -1002405454804,
     "main_channel": -1002225044624,
@@ -31,9 +31,9 @@ CHANNELS = {
     "backup_channel": -1002350788057,
     "main_reship": -1002625225887,
     "vouch_channel": -1002652451009,
-    "rapid_cashouts": -1004310102304,
-    "cashout_vouches": -1002107259762,
-    "extra_channel": -1003053857216,
+    "rapid_travels": -1004310102304,
+    "rapid_cashouts": -1002107259762,
+    "cashout_vouches": -1003053857216,
 }
 
 # Simple JSON User Storage
@@ -176,12 +176,12 @@ async def handle_quiz(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         caption_text = (
             "⚡️ RAPID REFUNDS ⚡️\n"
-            "Reship Like a Pro. Control Like a Boss.\n\n"
+            "Reship Refund Resell And Travel Like a Pro. Control Like a Boss...\n\n"
             "⸻\n\n"
             "🌟 Warm Greetings from the RAPID Team! 🌟\n"
             "Welcome to the most trusted and efficient reship & refund network — where precision, privacy, and professionalism meet speed and reliability.\n\n"
             "⸻\n\n"
-            "📦 Official RAPID Network Links:\n\n"
+            "📦 Official RAPID REFUND Network Links:\n\n"
             "🔹 Store List:\n"
             f"👉 {links.get('store_list', '#')}\n\n"
             "🔹 Main Channel:\n"
@@ -195,16 +195,15 @@ async def handle_quiz(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"👉 {links.get('main_reship', '#')}\n\n"
             "🔥 Vouch Channel:\n"
             f"👉 {links.get('vouch_channel', '#')}\n\n"
+            "⸻\n"
+            "☀️ Rapid Travels 🗽 (Hotels,Airbnb,Flight,Car rental,Tickets)\n"
+            f"👉 {links.get('rapid_travels', '#')}\n\n"
             "⸻\n\n"
             "💸 Rapid Cashouts:\n"
             f"👉 {links.get('rapid_cashouts', '#')}\n\n"
             "💰 Cashout Vouches:\n"
             f"👉 {links.get('cashout_vouches', '#')}\n\n"
-            "⸻\n"
-            "📨 Your links (60s valid):\n\n"
-            "1. Click the Link and Join\n"
-            "2. Make sure to join all the groups above by clicking the links\n"
-            "3. If you missed any, re-enter /start\n\n"
+            "⸻\n\n"
             "👑 Founder & Refunder:\n"
             "👉 @RapidRefunder"
         )
@@ -348,7 +347,4 @@ if __name__ == "__main__":
         asyncio.run(main())
     except (KeyboardInterrupt, SystemExit):
         pass
-
-
-
-
+                
